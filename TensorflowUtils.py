@@ -87,7 +87,10 @@ def get_tensor_size(tensor):
 
 def conv2d_basic(x, W, bias):
     conv = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding="SAME")
-    return tf.nn.bias_add(conv, bias)
+    if bias:
+        return tf.nn.bias_add(conv, bias)
+    else:
+        return conv
 
 
 def conv2d_strided(x, W, b):
