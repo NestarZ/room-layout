@@ -6,7 +6,6 @@ import sys
 from scipy import io
 
 NUM_OF_CLASSESS = 11
-#NUM_OF_POINTS = 8
 NUM_OF_POINTS = (5 * 5 * 3 * 3)
 
 def _bytes_feature(value):
@@ -81,8 +80,6 @@ def build_data(path):
 
                 label = np.array(room_type)
                 label = np.append(label, points_map)
-                #label = np.append(label, points)
-                #label = np.append(label, np.zeros(NUM_OF_POINTS * 2 + NUM_OF_CLASSESS - len(label)))
 
                 example = tf.train.Example(features=tf.train.Features(feature={
                     'filename': _bytes_feature(bytes(filename)),
@@ -108,7 +105,6 @@ def read_data(path, set, image_size, batch_size):
             'width': tf.FixedLenFeature([], tf.int64),
             'height': tf.FixedLenFeature([], tf.int64),
             'num_points': tf.FixedLenFeature([], tf.int64),
-            #'label': tf.FixedLenFeature([NUM_OF_POINTS * 2 + NUM_OF_CLASSESS], tf.float32),
             'label': tf.FixedLenFeature([NUM_OF_CLASSESS + NUM_OF_POINTS], tf.float32),
         })
 
@@ -150,7 +146,7 @@ def test(path):
     BATCH_SIZE = 32
 
     filename_op, image_op, width_op, height_op, num_points_op, label_op = \
-        read_data(path, 'validation', IMAGE_SIZE, BATCH_SIZE)
+        read_data(path, 'training', IMAGE_SIZE, BATCH_SIZE)
 
     with tf.Session()  as sess:
         sess.run(tf.global_variables_initializer())
@@ -177,15 +173,6 @@ def test(path):
                             point_y = int((y * span + points[y][x][c][1] * span) * IMAGE_SIZE)
                             point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                             cv2.circle(img, (point_x, point_y), 5, (0, 0, 255), -1)
-
-            '''
-            for j in xrange(0, num_points[i] * 2, 2):
-                x = int(points[j] * IMAGE_SIZE)
-                y = int(points[j + 1] * IMAGE_SIZE)
-                if x < 0: x = 0
-                if y < 0: y = 0
-                cv2.circle(img, (x, y), 5, (0, 0, 255), -1)
-            '''
 
             cv2.imshow('img', img)
             key = cv2.waitKey(0)

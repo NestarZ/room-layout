@@ -22,12 +22,8 @@ tf.flags.DEFINE_string('mode', 'train', 'Mode train/ val/ test')
 tf.flags.DEFINE_string('images_dir', '', 'path to test images')
 
 MODEL_URL = 'http://www.vlfeat.org/matconvnet/models/beta16/imagenet-vgg-verydeep-19.mat'
-TRAIN_SET_URL = 'http://lsun.cs.princeton.edu/challenge/2015/roomlayout/data/training.mat'
-VAL_SET_URL = 'http://lsun.cs.princeton.edu/challenge/2015/roomlayout/data/validation.mat'
-IMAGES_URL = 'http://lsun.cs.princeton.edu/challenge/2015/roomlayout/data/image.zip'
 
 NUM_OF_CLASSESS = 11
-#NUM_OF_POINTS = 8
 NUM_OF_POINTS = (5 * 5 * 3 * 3)
 IMAGE_SIZE = 224
 
@@ -77,13 +73,7 @@ def inference(image, keep_prob, is_train):
     '''
     print('setting up vgg initialized conv layers ...')
     model_data = utils.get_model_data(FLAGS.model_dir, MODEL_URL)
-
-    #mean = model_data['normalization'][0][0][0]
-    #mean_pixel = np.mean(mean, axis=(0, 1))
-
     weights = np.squeeze(model_data['layers'])
-
-    #processed_image = utils.process_image(image, mean_pixel)
     processed_image = tf.div(tf.subtract(image, 128), 128)
 
     with tf.variable_scope('inference'):
@@ -91,39 +81,10 @@ def inference(image, keep_prob, is_train):
         conv_final_layer = image_net['relu5_4']
         pool5 = utils.max_pool_2x2(conv_final_layer)
 
-        #conv6 = tf.layers.conv2d(pool5, NUM_OF_CLASSESS + NUM_OF_POINTS * 2, [1, 1], name='conv6')
         conv6 = tf.layers.conv2d(pool5, NUM_OF_CLASSESS + NUM_OF_POINTS, [1, 1], name='conv6')
         size = conv6.get_shape().as_list()[1]
         avg_pool = tf.layers.average_pooling2d(conv6, [size, size], [size, size], name='avg_pool')
-        #avg_pool = tf.reshape(avg_pool, [-1, NUM_OF_CLASSESS + NUM_OF_POINTS * 2])
         avg_pool = tf.reshape(avg_pool, [-1, NUM_OF_CLASSESS + NUM_OF_POINTS])
-
-        '''
-        pool5 = utils.max_pool_2x2(conv_final_layer)
-
-        W6 = utils.weight_variable([3, 3, 512, 1024], name='W6')
-        conv6 = utils.conv2d_basic(pool5, W6, None)
-        norm6 = utils.batch_norm(conv6, 1024, is_train, 'conv6_bn')
-        relu6 = tf.nn.relu(norm6, name='relu6')
-        if FLAGS.debug:
-            utils.add_activation_summary(relu6)
-        pool6 = utils.max_pool_2x2(relu6)
-
-        W7 = utils.weight_variable([1, 1, 1024, 1024], name='W7')
-        conv7 = utils.conv2d_basic(pool6, W7, None)
-        norm7 = utils.batch_norm(conv7, 1024, is_train, 'conv7_bn')
-        relu7 = tf.nn.relu(norm7, name='relu7')
-        if FLAGS.debug:
-            utils.add_activation_summary(relu7)
-        pool7 = utils.max_pool_2x2(relu7)
-        dropout7 = tf.nn.dropout(pool7, keep_prob=keep_prob)
-
-        W8 = utils.weight_variable([1, 1, 1024, NUM_OF_POINTS * 2 + NUM_OF_CLASSESS], name='W8')
-        b8 = utils.bias_variable([NUM_OF_POINTS * 2 + NUM_OF_CLASSESS], name='b8')
-        conv8 = utils.conv2d_basic(dropout7, W8, b8)
-
-        avg_pool = utils.avg_pool_2x2(conv8)
-        '''
 
     return avg_pool
 
@@ -150,18 +111,11 @@ def main(argv=None):
         is_train = tf.constant(False)
     else:
         images = tf.placeholder(tf.float32, shape=[None, IMAGE_SIZE, IMAGE_SIZE, 3], name='input_image')
-        #labels = tf.placeholder(tf.float32, shape=[None, NUM_OF_POINTS * 2 + NUM_OF_CLASSESS], name='label')
         labels = tf.placeholder(tf.float32, shape=[None, NUM_OF_CLASSESS + NUM_OF_POINTS], name='label')
         is_train = tf.constant(False)
 
     logits = inference(images, keep_probability, is_train)
     loss = tf.losses.mean_squared_error(labels, logits)
-    '''
-    split_labels = tf.split(labels, [NUM_OF_CLASSESS, NUM_OF_POINTS * 2], axis=1)
-    split_logits = tf.split(logits, [NUM_OF_CLASSESS, NUM_OF_POINTS * 2], axis=1)
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=split_labels[0], logits=split_logits[0])) \
-        + tf.losses.mean_squared_error(split_labels[1], split_logits[1])
-    '''
 
     trainable_var = tf.trainable_variables()
     if FLAGS.debug:
@@ -234,24 +188,9 @@ def main(argv=None):
                 pred = sess.run(logits, feed_dict={images: test_image, keep_probability: 1.0})
                 type = np.argmax(pred[0][:NUM_OF_CLASSESS])
                 point_pred = pred[0][NUM_OF_CLASSESS:]
-                #points = []
                 print('Room type: %s, Num of points: %d' % (type, num_points[type]))
 
-                '''
-                for i in range(num_points[type] * 2):
-                    if point_pred[i] < 0:
-                        point_pred[i] = 0
-                    elif point_pred[i] > 1:
-                        point_pred[i] = 1
-
-                    if i % 2 == 0:
-                        points.append(int(point_pred[i] * IMAGE_SIZE))
-                    else:
-                        points.append(int(point_pred[i] * IMAGE_SIZE))
-                '''
-
                 org_image = cv2.resize(org_image, (IMAGE_SIZE, IMAGE_SIZE))
-
                 points = np.reshape(point_pred, (5, 5, 3, 3))
                 shape = points.shape
                 span = 1. / shape[0]
@@ -262,11 +201,6 @@ def main(argv=None):
                                 point_y = int((y * span + points[y][x][c][1] * span) * IMAGE_SIZE)
                                 point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                                 cv2.circle(org_image, (point_x, point_y), 5, (0, 0, 255), -1)
-
-                '''
-                for i in range(0, len(points), 2):
-                    cv2.circle(org_image, (points[i], points[i + 1]), 5, (0, 0, 255), -1)
-                '''
 
                 cv2.imshow('img', org_image)
                 key = cv2.waitKey(0)
