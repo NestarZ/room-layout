@@ -20,11 +20,13 @@ tf.flags.DEFINE_string('model_dir', 'Model_zoo/', 'Path to vgg model mat')
 tf.flags.DEFINE_bool('debug', 'False', 'Debug mode: True/ False')
 tf.flags.DEFINE_string('mode', 'train', 'Mode train/ val/ test')
 tf.flags.DEFINE_string('images_dir', '', 'path to test images')
+tf.flags.DEFINE_float('thresh', '0.5', 'threshold for points')
 
 MODEL_URL = 'http://www.vlfeat.org/matconvnet/models/beta16/imagenet-vgg-verydeep-19.mat'
 
 NUM_OF_CLASSESS = 11
-NUM_OF_POINTS = (5 * 5 * 3 * 3)
+NUM_OF_CELL = 5
+NUM_OF_POINTS = (NUM_OF_CELL * NUM_OF_CELL * 3 * 3)
 IMAGE_SIZE = 224
 
 def vgg_net(weights, image, is_train):
@@ -191,13 +193,13 @@ def main(argv=None):
                 print('Room type: %s, Num of points: %d' % (type, num_points[type]))
 
                 org_image = cv2.resize(org_image, (IMAGE_SIZE, IMAGE_SIZE))
-                points = np.reshape(point_pred, (5, 5, 3, 3))
+                points = np.reshape(point_pred, (NUM_OF_CELL, NUM_OF_CELL, 3, 3))
                 shape = points.shape
                 span = 1. / shape[0]
                 for y in xrange(shape[0]):
                     for x in xrange(shape[1]):
                         for c in xrange(shape[2]):
-                            if points[y][x][c][0] > .5:
+                            if points[y][x][c][0] > FLAGS.thresh:
                                 point_y = int((y * span + points[y][x][c][1] * span) * IMAGE_SIZE)
                                 point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                                 cv2.circle(org_image, (point_x, point_y), 5, (0, 0, 255), -1)

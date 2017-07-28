@@ -6,7 +6,8 @@ import sys
 from scipy import io
 
 NUM_OF_CLASSESS = 11
-NUM_OF_POINTS = (5 * 5 * 3 * 3)
+NUM_OF_CELL = 5
+NUM_OF_POINTS = (NUM_OF_CELL * NUM_OF_CELL * 3 * 3)
 
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
@@ -22,9 +23,6 @@ def build_data(path):
 
     for set in sets:
         tfrecords_filename = '%s/lsun_%s.tfrecords' % (path, set[0])
-        if os.path.exists(tfrecords_filename):
-            print('TFRecord file already exist: %s' % tfrecords_filename)
-            continue
         writer = tf.python_io.TFRecordWriter(tfrecords_filename)
         datas = io.loadmat('%s/%s.mat' % (path, set[0]))[set[0]][0]
 
@@ -55,7 +53,7 @@ def build_data(path):
                     for j in xrange(0, num_points * 2, 2):
                         points[j] = 1 - points[j]
 
-                points_map = np.zeros((5, 5, 3, 3))
+                points_map = np.zeros((NUM_OF_CELL, NUM_OF_CELL, 3, 3))
                 shape = points_map.shape
                 span = 1. / shape[0]
                 for j in xrange(0, num_points * 2, 2):
@@ -119,10 +117,10 @@ def read_data(path, set, image_size, batch_size):
         image = tf.image.resize_images(tf.reshape(image, [height, width, 3]), [image_size + 8, image_size + 8])
         image = tf.random_crop(image, [image_size, image_size, 3])
 
-        image = tf.image.random_brightness(image, max_delta=32. / 255.)
-        image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
-        image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
-        image = tf.image.random_hue(image, max_delta=0.2)
+        image = tf.image.random_brightness(image, max_delta=64. / 255.)
+        image = tf.image.random_contrast(image, lower=0.5, upper=3.)
+        image = tf.image.random_saturation(image, lower=0.5, upper=3.)
+        image = tf.image.random_hue(image, max_delta=0.5)
 
         filename_batch, image_batch, width_batch, height_batch, num_points_batch, label_batch = \
             tf.train.shuffle_batch([filename, image, width, height, num_points, label],
@@ -163,7 +161,7 @@ def test(path):
             img = image[i].astype(np.uint8)
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-            points = np.reshape(points, (5, 5, 3, 3))
+            points = np.reshape(points, (NUM_OF_CELL, NUM_OF_CELL, 3, 3))
             shape = points.shape
             span = 1. / shape[0]
             for y in xrange(shape[0]):
