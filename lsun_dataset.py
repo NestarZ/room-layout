@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 import cv2
-import os
 import sys
 from scipy import io
 
@@ -112,15 +111,13 @@ def read_data(path, set, image_size, batch_size):
     height = tf.cast(features['height'], tf.int32)
     num_points = tf.cast(features['num_points'], tf.int32)
     label = features['label']
+    image = tf.image.resize_images(tf.reshape(image, [height, width, 3]), [image_size, image_size])
 
     if set == 'training':
-        image = tf.image.resize_images(tf.reshape(image, [height, width, 3]), [image_size + 8, image_size + 8])
-        image = tf.random_crop(image, [image_size, image_size, 3])
-
         image = tf.image.random_brightness(image, max_delta=64. / 255.)
         image = tf.image.random_contrast(image, lower=0.5, upper=3.)
         image = tf.image.random_saturation(image, lower=0.5, upper=3.)
-        image = tf.image.random_hue(image, max_delta=0.5)
+        image = tf.image.random_hue(image, max_delta=0.4)
 
         filename_batch, image_batch, width_batch, height_batch, num_points_batch, label_batch = \
             tf.train.shuffle_batch([filename, image, width, height, num_points, label],
@@ -129,8 +126,6 @@ def read_data(path, set, image_size, batch_size):
                 num_threads=4,
                 min_after_dequeue=4000)
     else:
-        image = tf.image.resize_images(tf.reshape(image, [height, width, 3]), [image_size, image_size])
-
         filename_batch, image_batch, width_batch, height_batch, num_points_batch, label_batch = \
             tf.train.batch([filename, image, width, height, num_points, label],
                batch_size=batch_size,

@@ -83,7 +83,8 @@ def inference(image, keep_prob, is_train):
         conv_final_layer = image_net['relu5_4']
         pool5 = utils.max_pool_2x2(conv_final_layer)
 
-        conv6 = tf.layers.conv2d(pool5, NUM_OF_CLASSESS + NUM_OF_POINTS, [1, 1], name='conv6')
+        dropout = tf.nn.dropout(pool5, keep_prob, name='dropout')
+        conv6 = tf.layers.conv2d(dropout, NUM_OF_CLASSESS + NUM_OF_POINTS, [1, 1], name='conv6')
         size = conv6.get_shape().as_list()[1]
         avg_pool = tf.layers.average_pooling2d(conv6, [size, size], [size, size], name='avg_pool')
         avg_pool = tf.reshape(avg_pool, [-1, NUM_OF_CLASSESS + NUM_OF_POINTS])
