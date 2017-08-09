@@ -151,9 +151,9 @@ def main(argv=None):
                 sess.run(train_op, feed_dict=feed_dict)
 
                 if step >= int(FLAGS.max_steps * 0.4) and step < int(FLAGS.max_steps * 0.8):
-                    lr = FLAGS.learning_rate * 0.1
+                    lr = FLAGS.learning_rate * 0.5
                 elif step >= int(FLAGS.max_steps * 0.8):
-                    lr = FLAGS.learning_rate * 0.01
+                    lr = FLAGS.learning_rate * 0.1
 
                 train_loss, summary_str = sess.run([loss, summary_op], feed_dict=feed_dict)
                 print('Step: %d, Learning rate: %f, Train loss: %f' % (step, lr, train_loss))
@@ -197,6 +197,7 @@ def main(argv=None):
                 points = np.reshape(point_pred, (NUM_OF_CELL, NUM_OF_CELL, 3, 3))
                 shape = points.shape
                 span = 1. / shape[0]
+
                 for y in xrange(shape[0]):
                     for x in xrange(shape[1]):
                         for c in xrange(shape[2]):
