@@ -195,6 +195,7 @@ def main(argv=None):
                 type = np.argmax(pred[0][:NUM_OF_CLASSESS])
                 point_pred = pred[0][NUM_OF_CLASSESS:]
                 print('Room type: %s, Num of points: %d' % (type, num_points[type]))
+                print('point_pred: %s' % point_pred)
 
                 org_image = cv2.resize(org_image, (IMAGE_SIZE, IMAGE_SIZE))
                 points = np.reshape(point_pred, (NUM_OF_CELL, NUM_OF_CELL, 3, 3))
@@ -208,13 +209,9 @@ def main(argv=None):
                                 point_y = int((y * span + points[y][x][c][1] * span) * IMAGE_SIZE)
                                 point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                                 cv2.circle(org_image, (point_x, point_y), 5, (0, 0, 255), -1)
-
+                
                 print("Saved to ./out/%s" % (file))
                 cv2.imwrite("./out/%s" % (file), org_image)
-                #cv2.imshow('img', org_image)
-                #key = cv2.waitKey(0)
-                #if key == 1048603: # ESC key
-                #    break
 
         coord.request_stop()
         coord.join(threads)
