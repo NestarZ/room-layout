@@ -132,10 +132,14 @@ def main(argv=None):
     with tf.Session() as sess:
         print('Setting up Saver...')
         saver = tf.train.Saver()
+        print("saver = tf.train.Saver()")
         summary_writer = tf.summary.FileWriter(FLAGS.logs_dir, sess.graph)
+        print("summary_writer = tf.summary.FileWriter(FLAGS.logs_dir, sess.graph)")
 
         sess.run(tf.global_variables_initializer())
+        print("sess.run(tf.global_variables_initializer())")
         ckpt = tf.train.get_checkpoint_state(FLAGS.logs_dir)
+        print("ckpt = tf.train.get_checkpoint_state(FLAGS.logs_dir)")
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
             print('Model restored...')
@@ -143,11 +147,13 @@ def main(argv=None):
         #coord = tf.train.Coordinator()
         #threads = tf.train.start_queue_runners(coord=coord)
         step = sess.run(global_step)
+        print("step = sess.run(global_step)")
         lr = FLAGS.learning_rate
 
         if FLAGS.mode == 'train':
             for _ in xrange(FLAGS.max_steps - step + 1):
                 feed_dict = {keep_probability: 0.5, learning_rate: lr}
+                print("sess.run(train_op, feed_dict=feed_dict)")
                 sess.run(train_op, feed_dict=feed_dict)
 
                 if step >= int(FLAGS.max_steps * 0.4) and step < int(FLAGS.max_steps * 0.8):
