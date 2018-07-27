@@ -132,22 +132,18 @@ def main(argv=None):
     with tf.Session() as sess:
         print('Setting up Saver...')
         saver = tf.train.Saver()
-        print("saver = tf.train.Saver()")
         summary_writer = tf.summary.FileWriter(FLAGS.logs_dir, sess.graph)
-        print("summary_writer = tf.summary.FileWriter(FLAGS.logs_dir, sess.graph)")
 
         sess.run(tf.global_variables_initializer())
-        print("sess.run(tf.global_variables_initializer())")
         ckpt = tf.train.get_checkpoint_state(FLAGS.logs_dir)
-        print("ckpt = tf.train.get_checkpoint_state(FLAGS.logs_dir)")
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
             print('Model restored...')
 
-        #coord = tf.train.Coordinator()
-        #threads = tf.train.start_queue_runners(coord=coord)
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+        print("threads = tf.train.start_queue_runners(coord=coord)")
         step = sess.run(global_step)
-        print("step = sess.run(global_step)")
         lr = FLAGS.learning_rate
 
         if FLAGS.mode == 'train':
@@ -160,7 +156,8 @@ def main(argv=None):
                     lr = FLAGS.learning_rate * 0.5
                 elif step >= int(FLAGS.max_steps * 0.8):
                     lr = FLAGS.learning_rate * 0.1
-
+                    
+                print("train_loss, summary_str = sess.run([loss, summary_op], feed_dict=feed_dict)")
                 train_loss, summary_str = sess.run([loss, summary_op], feed_dict=feed_dict)
                 print('Step: %d, Learning rate: %f, Train loss: %f' % (step, lr, train_loss))
                 summary_writer.add_summary(summary_str, step)
@@ -212,13 +209,13 @@ def main(argv=None):
                                 point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                                 cv2.circle(org_image, (point_x, point_y), 5, (0, 0, 255), -1)
 
-                cv2.imshow('img', org_image)
-                key = cv2.waitKey(0)
-                if key == 1048603: # ESC key
-                    break
+                #cv2.imshow('img', org_image)
+                #key = cv2.waitKey(0)
+                #if key == 1048603: # ESC key
+                #    break
 
-        #coord.request_stop()
-        #coord.join(threads)
+        coord.request_stop()
+        coord.join(threads)
 
 if __name__ == '__main__':
     tf.app.run()

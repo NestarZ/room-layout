@@ -114,6 +114,7 @@ def read_data(path, set, image_size, batch_size):
     image = tf.image.resize_images(tf.reshape(image, [height, width, 3]), [image_size, image_size])
 
     if set == 'training':
+        print("ok")
         image = tf.image.random_brightness(image, max_delta=64. / 255.)
         image = tf.image.random_contrast(image, lower=0.5, upper=3.)
         image = tf.image.random_saturation(image, lower=0.5, upper=3.)
