@@ -140,8 +140,8 @@ def main(argv=None):
             saver.restore(sess, ckpt.model_checkpoint_path)
             print('Model restored...')
 
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
+        #coord = tf.train.Coordinator()
+        #threads = tf.train.start_queue_runners(coord=coord)
         step = sess.run(global_step)
         lr = FLAGS.learning_rate
 
@@ -211,8 +211,8 @@ def main(argv=None):
                 if key == 1048603: # ESC key
                     break
 
-        coord.request_stop()
-        coord.join(threads)
+        #coord.request_stop()
+        #coord.join(threads)
 
 if __name__ == '__main__':
     tf.app.run()
