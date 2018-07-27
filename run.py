@@ -156,7 +156,7 @@ def main(argv=None):
                     lr = FLAGS.learning_rate * 0.5
                 elif step >= int(FLAGS.max_steps * 0.8):
                     lr = FLAGS.learning_rate * 0.1
-                    
+
                 print("train_loss, summary_str = sess.run([loss, summary_op], feed_dict=feed_dict)")
                 train_loss, summary_str = sess.run([loss, summary_op], feed_dict=feed_dict)
                 print('Step: %d, Learning rate: %f, Train loss: %f' % (step, lr, train_loss))
@@ -209,6 +209,7 @@ def main(argv=None):
                                 point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                                 cv2.circle(org_image, (point_x, point_y), 5, (0, 0, 255), -1)
 
+                cv2.imwrite('%s_layout_pred/%s' % (FLAGS.images_dir, file), org_image)
                 #cv2.imshow('img', org_image)
                 #key = cv2.waitKey(0)
                 #if key == 1048603: # ESC key
