@@ -209,6 +209,7 @@ def main(argv=None):
                                 point_x = int((x * span + points[y][x][c][2] * span) * IMAGE_SIZE)
                                 cv2.circle(org_image, (point_x, point_y), 5, (0, 0, 255), -1)
 
+                print("Saved to %s_layout_pred/%s" % (FLAGS.images_dir, file))
                 cv2.imwrite('%s_layout_pred/%s' % (FLAGS.images_dir, file), org_image)
                 #cv2.imshow('img', org_image)
                 #key = cv2.waitKey(0)
